@@ -6,6 +6,10 @@
 
 using namespace std;
 
+// so here 0 return value means it didnt find the keyword
+// and 1 return value means it found the keyword
+// rest negatives values denote somekind of error
+
 int main(int argc, char **argv)
 {
 	if(argc != 5)
@@ -26,14 +30,14 @@ int main(int argc, char **argv)
 
 	if (!filein.is_open()) {
 		cout << "ERROR : FILE DID NOT OPEN" << endl;
-		return 2;
+		return -2;
 	}
-	cout << "FILE OPENED SUCCESSFULLY" << endl;
+	//cout << "FILE OPENED SUCCESSFULLY" << endl;
 	
 	// okay so loading entire thing in a string in the memory 
 	int size = search_end_position - search_start_position;
 	string content(size+1, '\0');
-	filein.seekg(0);
+	filein.seekg(search_start_position);
 	int k;
 
 	// setting up the flag
@@ -42,10 +46,10 @@ int main(int argc, char **argv)
 	// checking if the conetent is properly copied in the string
 	if (!filein.read(&content[0], size)) {
 		cout << "ERROR : COULD NOT LOAD THE FILE CONTENT INTO THE STRING" << endl;
-		return 3;
+		return -3;
 	}
 	else {
-		cout << "CONTENT LOADED SUCCESSFULLY" << endl;
+		//cout << "CONTENT LOADED SUCCESSFULLY" << endl;
 
 		// checking if there exists a substsring that contains the pattern
 		k = content.find(pattern_to_search_for);
@@ -55,14 +59,17 @@ int main(int argc, char **argv)
 
 	// closing the file
 	filein.close();
-	cout << "FILE CLOSED" << endl;
+	//cout << "FILE CLOSED" << endl;
 	
+	pid_t my_pid = getpid();
+	cout << "[" << my_pid << "] Search :: Interval : start {" << search_start_position << "} end {" << search_end_position << "}" << endl;
+
 	if (!found) {
-		cout << "[-1] didn't find\n";
+		cout << "[" << my_pid << "] Search :: Not Found" << endl;
 		return 0;
 	}
 	else {
-		cout << "PATTERN :" << pattern_to_search_for << " :: FOUND @ : " << search_start_position + k << endl;
+		cout << ">>[" << my_pid << "] Search :: Found @ {" << search_start_position + k <<"}" << endl;
 		return 1;
 	}
 }
