@@ -65,6 +65,19 @@ void fifo_process::update(int cur_time)
 		}
 		return;
 	}
+
+	if (cur_state == RUNNING) {
+		if (cur_time > time_stamp) {
+			if (i < ios_bursts.size()) {
+				cur_state = BLOCKED;
+				time_stamp = ios_bursts[i] + cur_time;
+			}
+			else {
+				cur_state = DONE;
+				completion_time = cur_time;
+			}
+		}
+	}
 }
 
 
@@ -79,6 +92,13 @@ int fifo_process::cpu_done(int cur_time)
 		completion_time = cur_time + cpu_bursts[i] - 1;
 	}
 	
+	return cur_time + cpu_bursts[i] - 1;
+}
+
+int fifo_process::set_running(int cur_time)
+{
+	cur_state = RUNNING;
+	time_stamp = cur_time + cpu_bursts[i] - 1;
 	return cur_time + cpu_bursts[i] - 1;
 }
 
@@ -111,6 +131,24 @@ void rr_process::update(int cur_time)
 		}
 		return;
 	}
+
+	if (cur_state == RUNNING) {
+		if (cur_time > time_stamp) {
+			if (cpu_bursts[i] > 0) {
+				cur_state = READY;
+			}
+			else {
+				if (i < ios_bursts.size()) {
+					cur_state = BLOCKED;
+					time_stamp = ios_bursts[i] + cur_time;
+				}
+				else {
+					cur_state = DONE;
+					completion_time = cur_time;
+				}
+			}
+		}
+	}
 }
 
 int rr_process::cpu_done(int cur_time,int time_quanta)
@@ -130,6 +168,20 @@ int rr_process::cpu_done(int cur_time,int time_quanta)
 		}
 		return cur_time + cpu_bursts[i] - 1;
 	}
+}
+
+int rr_process::set_running(int cur_time, int time_quanta)
+{
+	cur_state = RUNNING;
+	if (cpu_bursts[i] - time_quanta > 0) {
+		cpu_bursts[i] -= time_quanta;
+		time_stamp = cur_time + time_quanta - 1;
+		return cur_time + time_quanta - 1;
+	}
+	int temp = cpu_bursts[i];
+	cpu_bursts[i] = 0;
+	time_stamp = cur_time + temp - 1;
+	return cur_time + temp - 1;
 }
 
 mlfq_process::mlfq_process(vector<int> input, int id)
@@ -161,6 +213,24 @@ void mlfq_process::update(int cur_time)
 		}
 		return;
 	}
+
+	if (cur_state == RUNNING) {
+		if (cur_time > time_stamp) {
+			if (cpu_bursts[i] > 0) {
+				cur_state = READY;
+			}
+			else {
+				if (i < ios_bursts.size()) {
+					cur_state = BLOCKED;
+					time_stamp = ios_bursts[i] + cur_time;
+				}
+				else {
+					cur_state = DONE;
+					completion_time = cur_time;
+				}
+			}
+		}
+	}
 }
 
 int mlfq_process::cpu_done(int cur_time, int time_quanta)
@@ -180,4 +250,19 @@ int mlfq_process::cpu_done(int cur_time, int time_quanta)
 		}
 		return cur_time + cpu_bursts[i] - 1;
 	}
+}
+
+
+int mlfq_process::set_running(int cur_time, int time_quanta)
+{
+	cur_state = RUNNING;
+	if (cpu_bursts[i] - time_quanta > 0) {
+		cpu_bursts[i] -= time_quanta;
+		time_stamp = cur_time + time_quanta - 1;
+		return cur_time + time_quanta - 1;
+	}
+	int temp = cpu_bursts[i];
+	cpu_bursts[i] = 0;
+	time_stamp = cur_time + temp - 1;
+	return cur_time + temp - 1;
 }

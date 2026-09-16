@@ -63,7 +63,10 @@ void mlfq(vector<mlfq_process*> mlfq_process_list, int time_quanta, int no_of_qu
 				// if we are at the reset time
 				// so we have 3 things ->
 				// reset time , time_remaining and time_quanta
-				if (cur_reset_time - cur_time <= time_quanta) {
+
+				bool not_normal_execution = (cur_reset_time - cur_time <= time_quanta) || (time_remaining[t] <= time_quanta);
+				bool hard_reset_first = cur_reset_time <= cur_time + time_remaining[t];
+				if (not_normal_execution && hard_reset_first) {
 					if (cur_reset_time - cur_time > 0) {
 						cur_time = t->cpu_done(cur_time, cur_reset_time - cur_time);
 						cout << "1queue:[" << mp[t] << "] " << "pid:[" << t->getpid() << "] : " << prev_time << " " << cur_time << endl;
@@ -97,7 +100,7 @@ void mlfq(vector<mlfq_process*> mlfq_process_list, int time_quanta, int no_of_qu
 					}
 					break;
 				}
-				else if( time_remaining[t] <=  time_quanta) {
+				else if( not_normal_execution && !hard_reset_first) {
 
 					// if remaining time is over
 					if (mp[t] < no_of_queues - 1) {

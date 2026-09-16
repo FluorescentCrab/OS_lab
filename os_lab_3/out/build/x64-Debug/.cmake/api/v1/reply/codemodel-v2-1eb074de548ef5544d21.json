@@ -17,7 +17,10 @@
 					[
 						0,
 						1,
-						2
+						2,
+						3,
+						4,
+						5
 					]
 				}
 			],
@@ -34,7 +37,10 @@
 					[
 						0,
 						1,
-						2
+						2,
+						3,
+						4,
+						5
 					]
 				}
 			],
@@ -49,6 +55,13 @@
 				},
 				{
 					"directoryIndex" : 0,
+					"id" : "fifo_mp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-fifo_mp-Debug-d3cce5bd620e8e3454db.json",
+					"name" : "fifo_mp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
 					"id" : "mlfq::@6890427a1f51a3e7e1df",
 					"jsonFile" : "target-mlfq-Debug-8191dc907fbd2acea284.json",
 					"name" : "mlfq",
@@ -56,9 +69,23 @@
 				},
 				{
 					"directoryIndex" : 0,
+					"id" : "mlfq_mp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-mlfq_mp-Debug-fb0912a94cbe81fbf8ae.json",
+					"name" : "mlfq_mp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
 					"id" : "round_robin::@6890427a1f51a3e7e1df",
 					"jsonFile" : "target-round_robin-Debug-98e5b0ec43b7cf735c16.json",
 					"name" : "round_robin",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "round_robin_mp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-round_robin_mp-Debug-67caae916f33cc229260.json",
+					"name" : "round_robin_mp",
 					"projectIndex" : 0
 				}
 			]

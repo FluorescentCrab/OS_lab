@@ -49,6 +49,8 @@ public:
 
 	// does cpu work and returns the elapsed time when cpu will be done with the process
 	int cpu_done(int cur_time);
+
+	int set_running(int cur_time);
 };
 
 //======================================================================================================================
@@ -66,6 +68,9 @@ public :
 
 	// cpu work
 	int cpu_done(int cur_time,int time_quanta);
+
+
+	int set_running(int cur_time, int time_quanta);
 
 };
 
@@ -97,5 +102,8 @@ public:
 
 	// cpu work
 	int cpu_done(int cur_time, int time_quanta);
+
+
+	int set_running(int cur_time, int time_quanta);
 
 };
