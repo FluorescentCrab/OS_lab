@@ -51,6 +51,8 @@ public:
 	int cpu_done(int cur_time);
 
 	int set_running(int cur_time);
+
+	int get_burst();
 };
 
 //======================================================================================================================
@@ -72,6 +74,7 @@ public :
 
 	int set_running(int cur_time, int time_quanta);
 
+	int get_burst();
 };
 
 //======================================================================================================================
@@ -106,4 +109,5 @@ public:
 
 	int set_running(int cur_time, int time_quanta);
 
+	int get_burst();
 };

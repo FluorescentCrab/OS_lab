@@ -27,7 +27,7 @@ int process::getpid() const
 
 int process::get_turn_around_time()
 {
-	return this->completion_time - this->arrival_time + 1;
+	return this->completion_time - this->arrival_time;
 }
 
 process_state process::get_state()
@@ -100,6 +100,11 @@ int fifo_process::set_running(int cur_time)
 	cur_state = RUNNING;
 	time_stamp = cur_time + cpu_bursts[i] - 1;
 	return cur_time + cpu_bursts[i] - 1;
+}
+
+int fifo_process::get_burst()
+{
+	return i;
 }
 
 rr_process::rr_process(vector<int> input, int id)
@@ -184,6 +189,11 @@ int rr_process::set_running(int cur_time, int time_quanta)
 	return cur_time + temp - 1;
 }
 
+int rr_process::get_burst()
+{
+	return i;
+}
+
 mlfq_process::mlfq_process(vector<int> input, int id)
 {
 	this->i = 0;
@@ -265,4 +275,9 @@ int mlfq_process::set_running(int cur_time, int time_quanta)
 	cpu_bursts[i] = 0;
 	time_stamp = cur_time + temp - 1;
 	return cur_time + temp - 1;
+}
+
+int mlfq_process::get_burst()
+{
+	return i;
 }

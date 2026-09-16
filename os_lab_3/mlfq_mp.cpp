@@ -7,7 +7,6 @@
 #include <unordered_map>
 #include "processes.hpp"
 
-#define queue_time 10
 
 using namespace std;
 
@@ -18,7 +17,7 @@ struct req_comp {
 	}
 };
 
-void mlfq(vector<mlfq_process*> mlfq_process_list, int time_quanta, int no_of_queues, int reset_time, int no_of_processors) {
+void mlfq(vector<mlfq_process*> mlfq_process_list, int time_quanta, int no_of_queues, int reset_time, int queue_time,int no_of_processors) {
 	int cur_time = 0;
 	int run_time = 0;
 	int cur_reset_time = reset_time - 1;
@@ -27,6 +26,7 @@ void mlfq(vector<mlfq_process*> mlfq_process_list, int time_quanta, int no_of_qu
 	unordered_map<mlfq_process*, int> mp;
 	unordered_map<mlfq_process*, int> time_remaining;
 	unordered_map<int, mlfq_process*> int_process_map;
+	vector<vector<vector<int>>> output(no_of_processors);
 
 	vector<mlfq_process*> requeue;
 
@@ -50,16 +50,22 @@ void mlfq(vector<mlfq_process*> mlfq_process_list, int time_quanta, int no_of_qu
 		for (cpu* c : processor_list) {
 			if (cur_time > c->time_stamp && c->isUsed) {
 				c->isUsed = false;
-				cout << "cpu id : [" << c->cpu_id << "] [" << c->pid << "] : " << c->time_started << " " << c->time_stamp << endl;
-				mlfq_process* t = int_process_map[c->pid];
+				vector<int> t;
+				t.push_back(c->pid);
+				t.push_back(int_process_map[c->pid]->get_burst());
+				t.push_back(c->time_started);
+				t.push_back(c->time_stamp);
+				output[c->cpu_id].push_back(t);
+				//cout << "cpu id : [" << c->cpu_id << "] [" << c->pid << "] : " << c->time_started << " " << c->time_stamp << endl;
+				mlfq_process* temp = int_process_map[c->pid];
 				
 				// so here we make sure that time remaining always reamins 0 if there is demotion
-				if (time_remaining[t] == 0) {
+				if (time_remaining[temp] == 0) {
 					// if time remainig is zero we demote
-					time_remaining[t] = queue_time;
-					if (mp[t] < no_of_queues - 1) {
-						int cur_q = mp[t];
-						mp[t] = cur_q + 1;
+					time_remaining[temp] = queue_time;
+					if (mp[temp] < no_of_queues - 1) {
+						int cur_q = mp[temp];
+						mp[temp] = cur_q + 1;
 					}
 				}
 			}
@@ -140,36 +146,51 @@ void mlfq(vector<mlfq_process*> mlfq_process_list, int time_quanta, int no_of_qu
 			}
 		}
 
+		for (mlfq_process* p : mlfq_process_list) {
+			if (p->get_state() == RUNNING) {
+				run_time++;
+				break;
+			}
+		}
+
 		cur_time++;
 	}
 
 
-	cout << "run time of the program : " << run_time << endl;
+	for (int i = 0; i < no_of_processors; i++) {
+		cout << "CPU" << i << endl;
+		for (vector<int> t : output[i]) {
+			cout << "P" << t[0] << "," << t[1] << "\t" << t[2] << "\t" << t[3] << endl;
+		}
+		cout << endl;
+	}
+
+
+	cout << "===========================================================" << endl;
+	cout << "RUN TIME : " << run_time << endl;
 
 	// average turn around time 
 	long long total_turn_around_time = 0;
 	int max_turn_around_time = 0;
 	for (mlfq_process* p : mlfq_process_list) {
 		int cur_turn_around_time = p->get_turn_around_time();
+		//cout << "turn around time " << cur_turn_around_time << endl;
 		max_turn_around_time = cur_turn_around_time > max_turn_around_time ? cur_turn_around_time : max_turn_around_time;
 		total_turn_around_time += cur_turn_around_time;
 	}
 
-
 	double average_turn_around_time = static_cast<double>(total_turn_around_time) / mlfq_process_list.size();
-	cout << "average turn around time : " << average_turn_around_time << endl;
-	cout << "max turn around time : " << max_turn_around_time << endl;
-
+	cout << "AVERAGE TURN AROUND TIME:" << average_turn_around_time << endl;
+	cout << "MAX TURN AROUND TIME:" << max_turn_around_time << endl;
 	return;
-
 }
 
 int main(int argc, char** argv) {
 
 	// argu init,file loading and taking input
 	// ====================================================================================
-	if (argc != 2) {
-		cout << "error invalid parameters :: usage : ./mlfq.out <path-to-workload-description-file> \ncurrent arguments : " << endl;
+	if (argc != 7) {
+		cout << "error invalid parameters :: usage : ./mlfq_mp.out <path-to-workload-description-file> <time_quanta> <no_of_queues> <reset_time> <queue_time> <no_of_processors>\ncurrent arguments : " << endl;
 		for (int i = 1; i < argc; i++)
 			cout << argv[i] << "\t";
 
@@ -177,11 +198,17 @@ int main(int argc, char** argv) {
 	}
 
 	char* path_to_workload_descriptor = argv[1];
+	char* time_qunata_char = argv[2];
+	char* no_of_queues_char = argv[3];
+	char* reset_time_char = argv[4];
+	char* queue_time_char = argv[5];
+	char* no_of_processors_char = argv[6];
 
-
-	const int time_quanta = 2;
-	const int no_of_queues = 3;
-	const int reset_time = 20;
+	const int time_quanta = atoi(time_qunata_char);
+	const int no_of_queues = atoi(no_of_queues_char);
+	const int reset_time = atoi(reset_time_char);
+	const int queue_time = atoi(queue_time_char);
+	const int no_of_processors = atoi(no_of_processors_char);
 
 	fstream workLoadFile(path_to_workload_descriptor);
 
@@ -190,8 +217,9 @@ int main(int argc, char** argv) {
 		return -2;
 	}
 
-	cout << "file loaded successfully" << endl;
-
+	//cout << "file loaded successfully" << endl;
+	cout << "===========================================================" << endl;
+	cout << "INPUTS : " << endl;
 	// ====================================================================================
 
 	vector<mlfq_process*> mlfq_process_list;
@@ -213,8 +241,8 @@ int main(int argc, char** argv) {
 	cout << endl;
 
 	// ====================================================================================
-
+	cout << "===========================================================" << endl;
 	cout << "STARTING MLFQ.." << endl;
-	mlfq(mlfq_process_list, time_quanta, no_of_queues, reset_time,2);
+	mlfq(mlfq_process_list, time_quanta, no_of_queues, reset_time,queue_time,no_of_processors);
 
 }

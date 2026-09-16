@@ -3,6 +3,7 @@
 #include <fstream>
 #include <queue>
 #include "cpu.hpp"
+#include <unordered_map>
 #include "processes.hpp"
 
 using namespace std;
@@ -20,11 +21,17 @@ void fifo(vector<fifo_process*> fifo_processList, int no_of_processors) {
 
 	int run_time = 0;
 
+	unordered_map<int, fifo_process*> int_process_map;
 	vector<cpu*> processor_list;
+	vector<vector<vector<int>>> output(no_of_processors);
 
 	for (int i = 0; i < no_of_processors; i++) {
 		cpu* c = new cpu(i);
 		processor_list.push_back(c);
+	}
+
+	for (fifo_process* p : fifo_processList) {
+		int_process_map[p->getpid()] = p;
 	}
 
 	queue<fifo_process*> fifo_processQueue;
@@ -48,7 +55,13 @@ void fifo(vector<fifo_process*> fifo_processList, int no_of_processors) {
 		for (cpu* c : processor_list) {
 			if (cur_time > c->time_stamp && c->isUsed) {
 				c->isUsed = false;
-				cout << "cpu id : [" << c->cpu_id << "] [" << c->pid << "] : " << c->time_started << " " << c->time_stamp << endl;
+				vector<int> t;
+				t.push_back(c->pid);
+				t.push_back(int_process_map[c->pid]->get_burst());
+				t.push_back(c->time_started);
+				t.push_back(c->time_stamp);
+				output[c->cpu_id].push_back(t);
+				//cout << "cpu id : [" << c->cpu_id << "] [" << c->pid << "] : " << c->time_started << " " << c->time_stamp << endl;
 			}
 		}
 
@@ -69,26 +82,42 @@ void fifo(vector<fifo_process*> fifo_processList, int no_of_processors) {
 			}
 		}
 
+		for (fifo_process* p : fifo_processList) {
+			if (p->get_state() == RUNNING) {
+				run_time++;
+				break;
+			}
+		}
+
 		cur_time++;
 
 	}
 
+	for (int i = 0; i < no_of_processors; i++) {
+		cout << "CPU" << i << endl;
+		for (vector<int> t : output[i]) {
+			cout << "P" << t[0] << "," << t[1] << "\t" << t[2] << "\t" << t[3] << endl;
+		}
+		cout << endl;
+	}
 	
-	
-	cout << "run time of the program : " << run_time << endl;
+
+	cout << "===========================================================" << endl;
+	cout << "RUN TIME : " << run_time << endl;
 
 	// average turn around time 
 	long long total_turn_around_time = 0;
 	int max_turn_around_time = 0;
 	for (fifo_process* p : fifo_processList) {
 		int cur_turn_around_time = p->get_turn_around_time();
+		//cout << "turn around time " << cur_turn_around_time << endl;
 		max_turn_around_time = cur_turn_around_time > max_turn_around_time ? cur_turn_around_time : max_turn_around_time;
 		total_turn_around_time += cur_turn_around_time;
 	}
 
 	double average_turn_around_time = static_cast<double>(total_turn_around_time) / fifo_processList.size();
-	cout << "average turn around time : " << average_turn_around_time << endl;
-	cout << "max turn around time : " << max_turn_around_time << endl;
+	cout << "AVERAGE TURN AROUND TIME:" << average_turn_around_time << endl;
+	cout << "MAX TURN AROUND TIME:" << max_turn_around_time << endl;
 	return;
 }
 
@@ -96,8 +125,8 @@ int main(int argc, char** argv) {
 
 	// argu init,file loading and taking input
 	// ====================================================================================
-	if (argc != 2) {
-		cout << "error invalid parameters :: usage : ./fifo.out <path-to-workload-description-file> \ncurrent arguments : " << endl;
+	if (argc != 3) {
+		cout << "error invalid parameters :: usage : ./fifo_mp.out <path-to-workload-description-file> <no_of_processors> \ncurrent arguments : " << endl;
 		for (int i = 1; i < argc; i++)
 			cout << argv[i] << "\t";
 
@@ -105,7 +134,8 @@ int main(int argc, char** argv) {
 	}
 
 	char* path_to_workload_descriptor = argv[1];
-
+	char* no_of_processors_char = argv[2];
+	int no_of_processors = atoi(no_of_processors_char);
 	fstream workLoadFile(path_to_workload_descriptor);
 
 	if (!workLoadFile.is_open()) {
@@ -113,8 +143,9 @@ int main(int argc, char** argv) {
 		return -2;
 	}
 
-	cout << "file loaded successfully" << endl;
-
+	//cout << "file loaded successfully" << endl;
+	cout << "===========================================================" << endl;
+	cout << "INPUTS : " << endl;
 	// ====================================================================================
 
 	vector<fifo_process*> fifo_process_list;
@@ -137,8 +168,9 @@ int main(int argc, char** argv) {
 
 	// ====================================================================================
 
-	cout << "STARTING FIFO.." << endl;
-	fifo(fifo_process_list,2);
+	cout << "===========================================================" << endl;
+	cout << "STARTING FIFO.. " << endl;
+	fifo(fifo_process_list,no_of_processors);
 
 	for (int i = 0; i < fifo_process_list.size(); i++) delete fifo_process_list[i];
 
